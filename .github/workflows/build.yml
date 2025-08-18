@@ -1,0 +1,38 @@
+name: Build DLL
+
+on: [push, pull_request]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@nightly
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build DLL (Debug)
+        run: cargo build --target x86_64-pc-windows-msvc
+
+      - name: Build DLL (Release)
+        run: cargo build --release --target x86_64-pc-windows-msvc
+
+      - name: Upload Debug DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: coldloader-debug
+          path: target/x86_64-pc-windows-msvc/debug/*.dll
+
+      - name: Upload Release DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: coldloader-release
+          path: target/x86_64-pc-windows-msvc/release/*.dll
