@@ -5,7 +5,7 @@ use std::{ffi::OsString, os::windows::ffi::OsStringExt, path::{Path, PathBuf}, s
 
 use anyhow::{anyhow, Result};
 use ini::CONFIG;
-use winapi::{shared::minwindef::{BOOL, DWORD, HMODULE, LPVOID, TRUE}, um::{libloaderapi::GetModuleFileNameW, winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH}}};
+use winapi::{shared::minwindef::{BOOL, DWORD, HMODULE, LPVOID, TRUE}, um::{libloaderapi::{GetModuleFileNameW, LoadLibraryW}, winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH}}};
 
 static DLL_PATH: OnceLock<PathBuf> = OnceLock::new();
 
@@ -99,7 +99,7 @@ fn initialize() -> Result<()> {
     
     // Load the DLLs
     let client_64_path = CONFIG.steamclient64_path.to_string_lossy().to_string();
-    let client_64_dll = unsafe { winapi::um::libloaderapi::LoadLibraryA(format!("{}\0", client_64_path).as_ptr() as *const i8) };
+    let client_64_dll = unsafe { LoadLibraryW(format!("{}\0", client_64_path).encode_utf16().collect::<Vec<u16>>().as_ptr()) };
     if client_64_dll.is_null() {
         return Err(anyhow!("Failed to load steamclient64.dll"));
     }
@@ -108,7 +108,7 @@ fn initialize() -> Result<()> {
 
     let gameoverlay_64_path = std::env::current_exe().unwrap().parent().unwrap().join("gameoverlayrenderer64.dll");
     if gameoverlay_64_path.exists() {
-        let gameoverlay_64_dll = unsafe { winapi::um::libloaderapi::LoadLibraryA(format!("{}\0", gameoverlay_64_path.to_str().unwrap()).as_ptr() as *const i8) };
+        let gameoverlay_64_dll = unsafe { LoadLibraryW(format!("{}\0", gameoverlay_64_path.to_string_lossy()).encode_utf16().collect::<Vec<u16>>().as_ptr()) };
         if gameoverlay_64_dll.is_null() {
             return Err(anyhow!("Failed to load gameoverlayrenderer64.dll"));
         }
