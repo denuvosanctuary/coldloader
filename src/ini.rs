@@ -18,7 +18,8 @@ pub const CONFIG: LazyLock<ColdLoaderConfig> = LazyLock::new(|| {
 #[derive(Debug)]
 pub struct ColdLoaderConfig {
     pub app_id: u32,
-    pub steamclient64_path: PathBuf
+    pub steamclient64_path: PathBuf,
+    pub cleanup_delay: u64,
 }
 
 pub fn read_config() -> Result<ColdLoaderConfig> {
@@ -59,9 +60,18 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
         })
         .ok_or_else(|| anyhow!("appid not found in coldloader.ini or steam_appid.txt"))?;
 
+    let cleanup_delay = ini
+        .as_ref()
+        .and_then(|ini| ini.section(Some("settings")))
+        .and_then(|s| s.get("cleanup_delay"))
+        .and_then(|s| s.parse::<u64>().ok())
+        .or(Some(5))
+        .unwrap();
+
     let config = ColdLoaderConfig {
         app_id,
-        steamclient64_path
+        steamclient64_path,
+        cleanup_delay
     };
 
     Ok(config)

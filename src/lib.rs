@@ -31,7 +31,7 @@ pub extern "system" fn DllMain(module: HMODULE, reason: DWORD, _reserved: LPVOID
             });
 
             std::thread::spawn(|| {
-                std::thread::sleep(std::time::Duration::from_secs(10));
+                std::thread::sleep(std::time::Duration::from_secs(CONFIG.cleanup_delay));
                 log::info!("Performing cleanup in background thread");
                 cleanup();
             });
