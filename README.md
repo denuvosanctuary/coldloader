@@ -19,7 +19,9 @@ This project aims to provide a DLL that can be used to load the coldclient versi
 
 3. **Add any DLL loader that loads coldloader.dll:**
     
-    You can use any DLL loader that loads `coldloader.dll` during the game startup. [Koaloader](https://github.com/acidicoala/Koaloader) is a suggested option.
+    You can use any DLL loader that loads `coldloader.dll` during the game startup. We recently released [coldloader-proxy](https://github.com/denuvosanctuary/coldloader-proxy) to that does this job! Works with as both version.dll and winmm.dll with no false positives on virustotal.
+
+    [Koaloader](https://github.com/acidicoala/Koaloader) is also a suggested option.
 
 4. **Run the game:**
     
