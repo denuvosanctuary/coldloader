@@ -7,6 +7,8 @@ use anyhow::{anyhow, Result};
 use ini::CONFIG;
 use winapi::{shared::minwindef::{BOOL, DWORD, HMODULE, LPVOID, TRUE}, um::{libloaderapi::{GetModuleFileNameW, LoadLibraryW}, winnt::{DLL_PROCESS_ATTACH, DLL_PROCESS_DETACH}}};
 
+use crate::logging::message_box;
+
 static DLL_PATH: OnceLock<PathBuf> = OnceLock::new();
 
 #[unsafe(no_mangle)]
@@ -27,6 +29,7 @@ pub extern "system" fn DllMain(module: HMODULE, reason: DWORD, _reserved: LPVOID
 
             initialize().unwrap_or_else(|e| {
                 log::error!("Failed to initialize: {}", e);
+                message_box(format!("Failed to initialize ColdLoader:\n{}", e).as_str());
                 std::process::exit(1);
             });
 
@@ -56,7 +59,7 @@ fn patch_registry() -> Result<()> {
         .open_subkey_with_flags("Software\\Valve\\Steam\\ActiveProcess", winreg::enums::KEY_ALL_ACCESS)
         .map(|key| {
             key.set_value("pid", &*PROCESS_ID).unwrap();
-            key.set_value("SteamClientDll64", &CONFIG.steamclient64_path.to_string_lossy().to_string()).unwrap();
+            key.set_value("SteamClientDll64", &CONFIG.steamclient64_path.to_string_lossy().to_string().replace("/", "\\")).unwrap();
             key.set_value("Universe", &STEAM_UNIVERSE).unwrap();
         })
         .map_err(|e| {
@@ -67,8 +70,8 @@ fn patch_registry() -> Result<()> {
     winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
         .open_subkey_with_flags("Software\\Valve\\Steam", winreg::enums::KEY_ALL_ACCESS)
         .map(|key| {
-            let client_path = CONFIG.steamclient64_path.clone();
-            key.set_value("SteamPath", &client_path.parent().unwrap().to_str().unwrap()).unwrap();
+            let steam_path = CONFIG.steamclient64_path.clone();
+            key.set_value("SteamPath", &steam_path.parent().unwrap().to_str().unwrap()).unwrap();
             key.set_value("RunningAppID", &CONFIG.app_id).unwrap();
         })
         .map_err(|e| {
@@ -98,8 +101,11 @@ fn initialize() -> Result<()> {
     patch_registry()?;
     
     // Load the DLLs
-    let client_64_path = CONFIG.steamclient64_path.to_string_lossy().to_string();
-    let client_64_dll = unsafe { LoadLibraryW(format!("{}\0", client_64_path).encode_utf16().collect::<Vec<u16>>().as_ptr()) };
+    let client_64_path = CONFIG.steamclient64_path.to_string_lossy().to_string().replace("/", "\\");
+    log::info!("Loading steamclient64.dll from path: {}", client_64_path);
+    let client_64_dll = unsafe {
+        LoadLibraryW(format!("{}\0", client_64_path).encode_utf16().collect::<Vec<u16>>().as_ptr())
+    };
     if client_64_dll.is_null() {
         return Err(anyhow!("Failed to load steamclient64.dll"));
     }
@@ -108,7 +114,9 @@ fn initialize() -> Result<()> {
 
     let gameoverlay_64_path = std::env::current_exe().unwrap().parent().unwrap().join("gameoverlayrenderer64.dll");
     if gameoverlay_64_path.exists() {
-        let gameoverlay_64_dll = unsafe { LoadLibraryW(format!("{}\0", gameoverlay_64_path.to_string_lossy()).encode_utf16().collect::<Vec<u16>>().as_ptr()) };
+        let gameoverlay_64_dll = unsafe {
+            LoadLibraryW(format!("{}\0", gameoverlay_64_path.to_string_lossy()).encode_utf16().collect::<Vec<u16>>().as_ptr())
+        };
         if gameoverlay_64_dll.is_null() {
             return Err(anyhow!("Failed to load gameoverlayrenderer64.dll"));
         }
@@ -130,17 +138,17 @@ fn cleanup() {
         });
 
     if let Ok(path) = install_path {
-        winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+        let _ = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
             .open_subkey_with_flags("Software\\Valve\\Steam\\ActiveProcess", winreg::enums::KEY_ALL_ACCESS)
             .map(|key| {
                 key.set_value("SteamClientDll64", &path.join("steamclient64.dll").to_str().unwrap()).unwrap();
-            }).ok();
+            });
         
-        winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
+        let _ = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER)
             .open_subkey_with_flags("Software\\Valve\\Steam", winreg::enums::KEY_ALL_ACCESS)
             .map(|key| {
                 key.set_value("SteamPath", &path.to_str().unwrap()).unwrap();
-            }).ok();
+            });
     }
 
     log::info!("Cleaned up registry");

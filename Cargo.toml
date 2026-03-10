@@ -9,8 +9,8 @@ name = "coldloader"
 crate-type = ["cdylib"]
 
 [dependencies]
-anyhow = "1.0.100"
-log = { version = "0.4.28", features = ["release_max_level_off"] }
+anyhow = "1.0.102"
+log = { version = "0.4.29", features = ["release_max_level_off"] }
 log4rs = "1.4.0"
 rust-ini = "0.21.3"
 winapi = { version = "0.3.9", features = ["minwindef", "libloaderapi", "processthreadsapi", "winuser"] }

@@ -65,7 +65,7 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
         .and_then(|ini| ini.section(Some("settings")))
         .and_then(|s| s.get("cleanup_delay"))
         .and_then(|s| s.parse::<u64>().ok())
-        .or(Some(5))
+        .or(Some(10))
         .unwrap();
 
     let config = ColdLoaderConfig {
