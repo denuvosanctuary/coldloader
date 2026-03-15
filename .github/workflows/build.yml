@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
@@ -38,13 +38,13 @@ jobs:
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Upload Debug DLL (${{ matrix.arch }})
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coldloader-debug${{ matrix.artifact_suffix }}
           path: target/${{ matrix.target }}/debug/*.dll
 
       - name: Upload Release DLL (${{ matrix.arch }})
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coldloader-release${{ matrix.artifact_suffix }}
           path: target/${{ matrix.target }}/release/*.dll
