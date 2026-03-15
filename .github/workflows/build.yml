@@ -8,31 +8,41 @@ env:
 jobs:
   build:
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+            arch: x64
+          - target: i686-pc-windows-msvc
+            arch: x86
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: ${{ matrix.target }}
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Build DLL (Debug)
-        run: cargo build --target x86_64-pc-windows-msvc
+      - name: Build DLL (Debug, ${{ matrix.arch }})
+        run: cargo build --target ${{ matrix.target }}
 
-      - name: Build DLL (Release)
-        run: cargo build --release --target x86_64-pc-windows-msvc
+      - name: Build DLL (Release, ${{ matrix.arch }})
+        run: cargo build --release --target ${{ matrix.target }}
 
-      - name: Upload Debug DLL
-        uses: actions/upload-artifact@v4
+      - name: Upload Debug DLL (${{ matrix.arch }})
+        uses: actions/upload-artifact@v7
         with:
-          name: coldloader-debug
-          path: target/x86_64-pc-windows-msvc/debug/*.dll
+          name: coldloader-debug-${{ matrix.arch }}
+          path: target/${{ matrix.target }}/debug/*.dll
 
-      - name: Upload Release DLL
-        uses: actions/upload-artifact@v4
+      - name: Upload Release DLL (${{ matrix.arch }})
+        uses: actions/upload-artifact@v7
         with:
-          name: coldloader-release
-          path: target/x86_64-pc-windows-msvc/release/*.dll
+          name: coldloader-release-${{ matrix.arch }}
+          path: target/${{ matrix.target }}/release/*.dll

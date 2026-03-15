@@ -18,7 +18,7 @@ pub const CONFIG: LazyLock<ColdLoaderConfig> = LazyLock::new(|| {
 #[derive(Debug)]
 pub struct ColdLoaderConfig {
     pub app_id: u32,
-    pub steamclient64_path: PathBuf,
+    pub steamclient_path: PathBuf,
     pub cleanup_delay: u64,
 }
 
@@ -27,11 +27,17 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
     let ini = ini::Ini::load_from_file(ini_path).ok();
     let dll_path = DLL_PATH.get().unwrap();
 
-    let steamclient64_path = ini
+    let steamclient_key = if cfg!(target_pointer_width = "64") {
+        "steamclient64"
+    } else {
+        "steamclient"
+    };
+
+    let steamclient_path = ini
         .as_ref()
         .and_then(|ini| ini.section(Some("settings")))
-        .and_then(|s| s.get("steamclient64"))
-        .or(Some("steamclient64.dll"))
+        .and_then(|s| s.get(steamclient_key))
+        .or(Some(&format!("{}.dll", steamclient_key)))
         .and_then(|s| {
             let path = dll_path.join(s);
             if path.exists() {
@@ -40,7 +46,7 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
                 None
             }
         })
-        .ok_or(anyhow!("steamclient64 not found"))?;
+        .ok_or(anyhow!("{} not found", steamclient_key))?;
 
     let app_id = ini
         .as_ref()
@@ -49,7 +55,7 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
         .and_then(|s| s.parse::<u32>().ok())
         .or_else(|| {
             // read the app_id from steam_settings/steam_appid.txt
-            let appid_path = steamclient64_path
+            let appid_path = steamclient_path
                 .parent()?
                 .join("steam_settings")
                 .join("steam_appid.txt");
@@ -65,12 +71,12 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
         .and_then(|ini| ini.section(Some("settings")))
         .and_then(|s| s.get("cleanup_delay"))
         .and_then(|s| s.parse::<u64>().ok())
-        .or(Some(5))
+        .or(Some(10))
         .unwrap();
 
     let config = ColdLoaderConfig {
         app_id,
-        steamclient64_path,
+        steamclient_path,
         cleanup_delay
     };
 
