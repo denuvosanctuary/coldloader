@@ -14,10 +14,8 @@ jobs:
         include:
           - target: x86_64-pc-windows-msvc
             arch: x64
-            artifact_suffix: ""
           - target: i686-pc-windows-msvc
             arch: x86
-            artifact_suffix: -x86
 
     steps:
       - name: Checkout repository
@@ -40,11 +38,11 @@ jobs:
       - name: Upload Debug DLL (${{ matrix.arch }})
         uses: actions/upload-artifact@v7
         with:
-          name: coldloader-debug${{ matrix.artifact_suffix }}
+          name: coldloader-debug-${{ matrix.arch }}
           path: target/${{ matrix.target }}/debug/*.dll
 
       - name: Upload Release DLL (${{ matrix.arch }})
         uses: actions/upload-artifact@v7
         with:
-          name: coldloader-release${{ matrix.artifact_suffix }}
+          name: coldloader-release-${{ matrix.arch }}
           path: target/${{ matrix.target }}/release/*.dll
