@@ -1,6 +1,6 @@
 [package]
 name = "coldloader"
-version = "1.2.0"
+version = "1.3.0"
 edition = "2024"
 authors = ["NotAndreh"]
 
@@ -14,7 +14,7 @@ log = { version = "0.4.29", features = ["release_max_level_off"] }
 log4rs = "1.4.0"
 rust-ini = "0.21.3"
 winapi = { version = "0.3.9", features = ["minwindef", "libloaderapi", "processthreadsapi", "winuser"] }
-winreg = "0.55.0"
+winreg = "0.56.0"
 
 [profile.release]
 lto = true

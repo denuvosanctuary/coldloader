@@ -15,7 +15,7 @@ This project aims to provide a DLL that can be used to load the coldclient versi
 2. **Add the loader files to the game files:**
 
     Place the compiled `coldloader.dll` in the game files, and add the `coldloader.EXAMPLE.ini` file, renaming it to `coldloader.ini` and filling in the required fields.
-    The loader can work without the `coldloader.ini` file, supposed that `steam_settings/steam_appid.txt` contains the App ID and `steamclient64.dll` is present in the same directory.
+    The loader can work without the `coldloader.ini` file, supposed that `steam_settings/steam_appid.txt` contains the App ID and `steamclient64.dll` (or `steamclient.dll` in case of x86 games) is present in the same directory.
 
 3. **Add any DLL loader that loads coldloader.dll:**
     
