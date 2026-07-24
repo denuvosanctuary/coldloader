@@ -1,4 +1,5 @@
 use {std::{ffi::CString, str::FromStr as _}, winapi::um::winuser::MessageBoxA};
+use crate::ini::Config;
 
 #[cfg(debug_assertions)]
 use {
@@ -12,6 +13,9 @@ static LOGGER: Once = Once::new();
 
 #[cfg(debug_assertions)]
 pub fn init_logger() {
+    if !Config.enable_logging {
+        return;
+    }
     LOGGER.call_once(|| {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
