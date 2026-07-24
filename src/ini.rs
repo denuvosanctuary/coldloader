@@ -20,6 +20,7 @@ pub struct ColdLoaderConfig {
     pub app_id: u32,
     pub steamclient_path: PathBuf,
     pub cleanup_delay: u64,
+    pub enable_logging: bool,
 }
 
 pub fn read_config() -> Result<ColdLoaderConfig> {
@@ -74,10 +75,18 @@ pub fn read_config() -> Result<ColdLoaderConfig> {
         .or(Some(10))
         .unwrap();
 
+    let enable_logging = ini
+        .as_ref()
+        .and_then(|ini| ini.section(Some("settings")))
+        .and_then(|s| s.get("enable_logging"))
+        .and_then(|s| s.parse::<bool>().ok())
+        .unwrap_or(false);
+
     let config = ColdLoaderConfig {
         app_id,
         steamclient_path,
-        cleanup_delay
+        cleanup_delay,
+        enable_logging,
     };
 
     Ok(config)
